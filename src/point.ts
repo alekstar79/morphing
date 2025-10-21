@@ -1,11 +1,26 @@
-/**
-* @class
-* @name MorphPoint
-*/
+interface GridPoint {
+  x: number;
+  y: number;
+}
+
 export class MorphPoint
 {
-  constructor(x = 0, y = 0, color = 0, radius = 0, id = 0)
-  {
+  public x: number
+  public y: number
+  public color: number
+  public radius: number
+  public id: number
+  public red: number
+  public green: number
+  public blue: number
+
+  constructor(
+    x: number = 0,
+    y: number = 0,
+    color: number = 0,
+    radius: number = 0,
+    id: number = 0
+  ) {
     this.x = x
     this.y = y
     this.color = color
@@ -17,12 +32,12 @@ export class MorphPoint
     this.blue = color & 0xff
   }
 
-  clone()
+  clone(): MorphPoint
   {
     return new MorphPoint(this.x, this.y, this.color, this.radius, this.id)
   }
 
-  distanceTo(otherPoint)
+  distanceTo(otherPoint: MorphPoint): number
   {
     const dx = this.x - otherPoint.x
     const dy = this.y - otherPoint.y
@@ -30,7 +45,7 @@ export class MorphPoint
     return Math.sqrt(dx * dx + dy * dy)
   }
 
-  toGrid(cellSize)
+  toGrid(cellSize: number): GridPoint
   {
     return {
       x: Math.floor(this.x / cellSize),
@@ -38,7 +53,7 @@ export class MorphPoint
     }
   }
 
-  generateRandomAround(minDistance)
+  generateRandomAround(minDistance: number): MorphPoint
   {
     const radius = minDistance * (Math.random() + 1)
     const angle = 2 * Math.PI * Math.random()
@@ -49,12 +64,12 @@ export class MorphPoint
     )
   }
 
-  isInRectangle(width, height)
+  isInRectangle(width: number, height: number): boolean
   {
     return this.x >= 0 && this.x <= width && this.y >= 0 && this.y <= height
   }
 
-  interpolateTo(targetPoint, ratio)
+  interpolateTo(targetPoint: MorphPoint, ratio: number): MorphPoint
   {
     const red = this.red + (targetPoint.red - this.red) / ratio
     const green = this.green + (targetPoint.green - this.green) / ratio
@@ -66,7 +81,7 @@ export class MorphPoint
     return new MorphPoint(x, y, (red << 16) | (green << 8) | blue, radius, this.id)
   }
 
-  isSimilarTo(otherPoint, threshold = 0.005)
+  isSimilarTo(otherPoint: MorphPoint, threshold: number = 0.005): boolean
   {
     return (
       Math.abs(this.x - otherPoint.x) <= threshold &&

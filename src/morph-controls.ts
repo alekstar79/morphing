@@ -1,4 +1,4 @@
-export const morphControls = () => `<div>
+export const morphControls = (): string => `<div>
   <button id="prev-btn" class="morph-btn">Prev</button>
   <button id="next-btn" class="morph-btn">Next</button>
   <button id="play-btn" class="morph-btn">Play</button>

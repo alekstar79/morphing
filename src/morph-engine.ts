@@ -1,18 +1,38 @@
-import { deepMerge } from './deep-merge.js'
-import { morphControls } from './morph-controls.js'
+import { deepMerge } from '@/utils/deep-merge'
+import { morphControls } from '@/morph-controls'
 
-import { PoissonDiskSampler } from './poisson-disk-sampler.js'
-import { CircleTextureGenerator } from './circle-texture-generator.js'
-import { ImageProcessor } from './image-processor.js'
-import { MorphRenderer } from './morph-renderer.js'
+import { PoissonDiskSampler } from './poisson-disk-sampler.ts'
+import { CircleTextureGenerator } from './circle-texture-generator.ts'
+import { ImageProcessor } from './image-processor.ts'
+import { MorphRenderer } from './morph-renderer.ts'
 
-/**
-* @class
-* @name MorphEngine
-*/
+import { ImageDistribution } from './image-distribution.ts'
+import { MorphPoint } from './point.ts'
+
+interface MorphEngineSettings {
+  imgWidth: number;
+  imgHeight: number;
+  className: string;
+  pointCount: number;
+  pointRadius: number;
+  morphSpeed: number;
+  autoPlay: boolean;
+  loop: boolean;
+  showProgress: boolean;
+  transitionDuration: number;
+  backgroundColor: string;
+  canvasStyle: Record<string, string>;
+}
+
+interface MergeContext {
+  path?: string;
+  parent?: Record<string, any>;
+  [key: string]: any;
+}
+
 export class MorphEngine
 {
-  static DEFAULT_SETTINGS = {
+  static DEFAULT_SETTINGS: MorphEngineSettings = {
     imgWidth: 640,
     imgHeight: 500,
     className: 'morph-canvas',
@@ -27,13 +47,29 @@ export class MorphEngine
     canvasStyle: {}
   }
 
-  constructor(container, settings = {})
+  public settings: MorphEngineSettings
+  public container: HTMLElement
+  public currentDistributionIndex: number
+  public distributions: ImageDistribution[]
+  public fromPoints: MorphPoint[]
+  public toPoints: MorphPoint[]
+  public isMorphing: boolean
+  public currentRatio: number
+  public animationId: number | null
+
+  public canvas!: HTMLCanvasElement
+  public controls!: HTMLElement
+  public renderer!: MorphRenderer
+  public imageProcessor!: ImageProcessor
+  public circleTexture!: CircleTextureGenerator
+
+  constructor(container: HTMLElement, settings: Partial<MorphEngineSettings> = {})
   {
     this.settings = deepMerge(
       MorphEngine.DEFAULT_SETTINGS,
       settings,
       this.mergeCustomizer.bind(this)
-    )
+    ) as MorphEngineSettings
 
     this.container = container
 
@@ -50,8 +86,12 @@ export class MorphEngine
     this.initializeControls()
   }
 
-  mergeCustomizer(key, targetValue, sourceValue, context)
-  {
+  private mergeCustomizer(
+    key: string,
+    targetValue: any,
+    sourceValue: any,
+    context: MergeContext
+  ): any {
     if (context.path?.includes('canvasStyle')) {
       if (typeof targetValue === 'object' && typeof sourceValue === 'object') {
         return { ...targetValue, ...sourceValue }
@@ -73,7 +113,7 @@ export class MorphEngine
     return undefined
   }
 
-  initializeComponents()
+  private initializeComponents(): void
   {
     this.canvas = document.createElement('canvas')
     this.canvas.className = this.settings.className
@@ -103,7 +143,7 @@ export class MorphEngine
     this.canvas.addEventListener('click', () => this.next())
   }
 
-  initializeControls()
+  private initializeControls(): void
   {
     // Create control panel
     this.controls = document.createElement('div')
@@ -114,21 +154,21 @@ export class MorphEngine
     this.container.appendChild(this.controls)
 
     // Add event listeners
-    this.controls.querySelector('#prev-btn').addEventListener('click', () => this.prev())
-    this.controls.querySelector('#next-btn').addEventListener('click', () => this.next())
-    this.controls.querySelector('#play-btn').addEventListener('click', () => this.play())
+    this.controls.querySelector('#prev-btn')!.addEventListener('click', () => this.prev())
+    this.controls.querySelector('#next-btn')!.addEventListener('click', () => this.next())
+    this.controls.querySelector('#play-btn')!.addEventListener('click', () => this.play())
   }
 
-  updateControls()
+  private updateControls(): void
   {
-    const counter = this.controls.querySelector('#image-counter')
+    const counter = this.controls.querySelector('#image-counter')!
     counter.textContent = `${this.currentDistributionIndex + 1}/${this.distributions.length}`
 
-    const playBtn = this.controls.querySelector('#play-btn')
+    const playBtn = this.controls.querySelector('#play-btn')!
     playBtn.textContent = this.settings.autoPlay ? 'Stop' : 'Play' // ■ Stop ▶ Play
   }
 
-  async loadImages(imageUrls)
+  async loadImages(imageUrls: string[]): Promise<boolean>
   {
     if (!imageUrls || imageUrls.length < 2) {
       throw new Error('At least 2 images are required')
@@ -180,7 +220,7 @@ export class MorphEngine
     }
   }
 
-  async addImage(imageUrl)
+  async addImage(imageUrl: string): Promise<ImageDistribution>
   {
     try {
       const imageData = await this.imageProcessor.loadImage(imageUrl)
@@ -207,17 +247,17 @@ export class MorphEngine
     }
   }
 
-  getCurrentImageIndex()
+  getCurrentImageIndex(): number
   {
     return this.currentDistributionIndex
   }
 
-  getImageCount()
+  getImageCount(): number
   {
     return this.distributions.length
   }
 
-  gotoImage(index)
+  gotoImage(index: number): boolean
   {
     if (index < 0 || index >= this.distributions.length || this.isMorphing) {
       return false
@@ -236,7 +276,7 @@ export class MorphEngine
     return true
   }
 
-  next()
+  next(): void
   {
     if (this.isMorphing || this.distributions.length < 2) return
 
@@ -259,7 +299,7 @@ export class MorphEngine
     })
   }
 
-  prev()
+  prev(): void
   {
     if (this.isMorphing || this.distributions.length < 2) return
 
@@ -278,7 +318,7 @@ export class MorphEngine
     })
   }
 
-  morph(onComplete = null)
+  private morph(onComplete: (() => void) | null = null): void
   {
     if (this.animationId) {
       cancelAnimationFrame(this.animationId)
@@ -311,7 +351,7 @@ export class MorphEngine
     this.animationId = requestAnimationFrame(animate)
   }
 
-  play()
+  play(): void
   {
     this.settings.autoPlay = !this.settings.autoPlay
     this.updateControls()
@@ -321,13 +361,13 @@ export class MorphEngine
     }
   }
 
-  destroy()
+  destroy(): void
   {
     if (this.animationId) {
       cancelAnimationFrame(this.animationId)
     }
 
-    this.canvas.removeEventListener('click', this.next)
+    this.canvas.removeEventListener('click', this.next as any)
 
     if (this.container.contains(this.canvas)) {
       this.container.removeChild(this.canvas)

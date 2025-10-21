@@ -1,31 +1,34 @@
-/**
-* @class
-* @name ImageDistribution
-* @property {string} id
-* @property {ImageData} imageData
-* @property {MorphPoint[]} points
-* @property {number} maxRadius
-* @property {number} minRadius
-*/
+import { MorphPoint } from '@/point'
+
 export class ImageDistribution
 {
-  constructor(imageData, points, maxRadius, minRadius)
-  {
+  public id: string
+  public imageData: ImageData
+  public points: MorphPoint[]
+  public maxRadius: number
+  public minRadius: number
+
+  constructor(
+    imageData: ImageData,
+    points: MorphPoint[],
+    maxRadius: number,
+    minRadius: number
+  ) {
     this.id = Math.random().toString(36).substring(2, 11)
     this.imageData = imageData
-    this.points = points
     this.maxRadius = maxRadius
     this.minRadius = minRadius
+    this.points = points
   }
 
-  getPointCount()
+  getPointCount(): number
   {
     return this.points.length
   }
 
-  findClosestPoint(point, maxDistance = 50)
+  findClosestPoint(point: MorphPoint, maxDistance: number = 50): MorphPoint | null
   {
-    let closestPoint = null
+    let closestPoint: MorphPoint | null = null
     let minDistance = Infinity
 
     for (const p of this.points) {

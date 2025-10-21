@@ -1,20 +1,17 @@
-/**
-* @class
-* @name CircleTextureGenerator
-* @property {HTMLCanvasElement} canvas
-* @property {CanvasRenderingContext2D} ctx
-* @property {Uint8ClampedArray} textureData
-*/
 export class CircleTextureGenerator
 {
+  public canvas: HTMLCanvasElement
+  public ctx: CanvasRenderingContext2D
+  public textureData: Uint8ClampedArray | null
+
   constructor()
   {
     this.canvas = document.createElement('canvas')
-    this.ctx = this.canvas.getContext('2d')
+    this.ctx = this.canvas.getContext('2d')!
     this.textureData = null
   }
 
-  generate(maxRadius, increment = 0.005)
+  generate(maxRadius: number, increment: number = 0.005): Uint8ClampedArray
   {
     const sections = Math.ceil(maxRadius / increment)
     const textureWidth = sections * Math.ceil(maxRadius * 2)
@@ -43,7 +40,7 @@ export class CircleTextureGenerator
     return this.textureData
   }
 
-  getPixel(x, y)
+  getPixel(x: number, y: number): number
   {
     if (x < 0 || y < 0 || x >= this.canvas.width || y >= this.canvas.height) {
       return 255

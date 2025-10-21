@@ -1,24 +1,29 @@
-/**
-* Deep merge objects with custom callback handler for merge customization
-* @param {{[p: string]: *}} target - Target object to merge into
-* @param {{[p: string]: *}} source - Source object to merge from
-* @param {(function(...[*]): *)?} [customizer] - Custom callback function for merge handling
-* @param {{[p: string]: *}} [context={}] - Context with path and parent object
-* @param {string} customizer.key - Current key being merged
-* @param {any} customizer.targetValue - Value from target object
-* @param {any} customizer.sourceValue - Value from source object
-* @param {{[p: string]: *}} customizer.context - Merge context (optional)
-* @returns {{[p: string]: *}} Merged object
-*/
-export function deepMerge(target, source, customizer = null, context = {})
-{
+interface MergeContext {
+  path?: string;
+  parent?: Record<string, any>;
+  [key: string]: any;
+}
+
+type CustomizerFunction = (
+  key: string,
+  targetValue: any,
+  sourceValue: any,
+  context: MergeContext
+) => any
+
+export function deepMerge(
+  target: Record<string, any> | null,
+  source: Record<string, any> | null,
+  customizer: CustomizerFunction | null = null,
+  context: MergeContext = {}
+): Record<string, any> {
   // Handle null/undefined inputs
   if (target === null || typeof target !== 'object') {
-    return customizer ? customizer('root', target, source, context) : source
+    return customizer ? customizer('root', target, source, context) : source || {}
   }
 
   if (source === null || typeof source !== 'object') {
-    return customizer ? customizer('root', target, source, context) : target
+    return customizer ? customizer('root', target, source, context) : target || {}
   }
 
   // Handle array merging
@@ -51,11 +56,11 @@ export function deepMerge(target, source, customizer = null, context = {})
 
   // Merge all keys from source
   for (const key of Object.keys(source)) {
-    const targetValue = target[key]
-    const sourceValue = source[key]
+    const targetValue = (target as Record<string, any>)[key]
+    const sourceValue = (source as Record<string, any>)[key]
 
     // Create new context for nested merging
-    const newContext = {
+    const newContext: MergeContext = {
       ...context,
       path: context.path ? `${context.path}.${key}` : key,
       parent: output

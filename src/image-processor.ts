@@ -1,17 +1,14 @@
-/**
-* @class
-* @name ImageProcessor
-* @property {HTMLCanvasElement} canvas
-* @property {CanvasRenderingContext2D} ctx
-* @property {number} width
-* @property {number} height
-*/
 export class ImageProcessor
 {
-  constructor(width, height)
+  public canvas: HTMLCanvasElement
+  public ctx: CanvasRenderingContext2D
+  public width: number
+  public height: number
+
+  constructor(width: number, height: number)
   {
     this.canvas = document.createElement('canvas')
-    this.ctx = this.canvas.getContext('2d', { willReadFrequently: true })
+    this.ctx = this.canvas.getContext('2d', { willReadFrequently: true })!
 
     this.height = height
     this.width = width
@@ -21,11 +18,7 @@ export class ImageProcessor
     this.canvas.width = width
   }
 
-  /**
-   * @param {string} src
-   * @returns {Promise<ImageData>}
-   */
-  loadImage(src)
+  loadImage(src: string): Promise<ImageData>
   {
     return new Promise((resolve, reject) => {
       const img = new Image()

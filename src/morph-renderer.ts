@@ -1,12 +1,25 @@
+import { CircleTextureGenerator } from '@/circle-texture-generator'
+import { MorphPoint } from '@/point'
+
 // Formula for calculating relative luminance
-const calcLuminance = (r, g, b) => (r * 299 + g * 587 + b * 114) / 1000
+const calcLuminance = (r: number, g: number, b: number): number => (r * 299 + g * 587 + b * 114) / 1000
 
 export class MorphRenderer
 {
-  constructor(canvas, width, height,  backgroundColor = '#ffffff')
-  {
+  public canvas: HTMLCanvasElement
+  public ctx: CanvasRenderingContext2D
+  public width: number
+  public height: number
+  public backgroundColor: string
+
+  constructor(
+    canvas: HTMLCanvasElement,
+    width: number,
+    height: number,
+    backgroundColor: string = '#ffffff'
+  ) {
     this.canvas = canvas
-    this.ctx = canvas.getContext('2d', { alpha: backgroundColor === 'transparent' })
+    this.ctx = canvas.getContext('2d', { alpha: backgroundColor === 'transparent' })!
     this.width = width
     this.height = height
     this.backgroundColor = backgroundColor
@@ -20,7 +33,7 @@ export class MorphRenderer
     }
   }
 
-  clear()
+  clear(): void
   {
     if (this.backgroundColor === 'transparent') {
       this.ctx.clearRect(0, 0, this.width, this.height)
@@ -30,7 +43,7 @@ export class MorphRenderer
     }
   }
 
-  drawPoints(points)
+  drawPoints(points: MorphPoint[]): void
   {
     points.forEach(point => {
       this.ctx.fillStyle = `rgb(${point.red}, ${point.green}, ${point.blue})`
@@ -40,13 +53,18 @@ export class MorphRenderer
     })
   }
 
-  renderMorphFrame(fromPoints, toPoints, ratio, circleTexture, progress = 0)
-  {
+  renderMorphFrame(
+    fromPoints: MorphPoint[],
+    toPoints: MorphPoint[],
+    ratio: number,
+    circleTexture: CircleTextureGenerator,
+    progress: number = 0
+  ): void {
     this.clear()
 
     // Create a temporary canvas for morphing
     const tempCanvas = document.createElement('canvas')
-    const tempCtx = tempCanvas.getContext('2d', { alpha: this.backgroundColor === 'transparent' })
+    const tempCtx = tempCanvas.getContext('2d', { alpha: this.backgroundColor === 'transparent' })!
 
     tempCanvas.width = this.width
     tempCanvas.height = this.height
@@ -106,8 +124,11 @@ export class MorphRenderer
     }
   }
 
-  renderCircle(pixels, point, circleTexture)
-  {
+  private renderCircle(
+    pixels: Uint8ClampedArray,
+    point: MorphPoint,
+    circleTexture: CircleTextureGenerator
+  ): void {
     const roundedRadius = Math.max(Math.floor(point.radius), 1)
     const centerX = Math.floor(point.x)
     const centerY = Math.floor(point.y)
@@ -154,7 +175,7 @@ export class MorphRenderer
     }
   }
 
-  drawProgressIndicator(progress)
+  private drawProgressIndicator(progress: number): void
   {
     const width = this.width * 0.5
     const height = 20
@@ -195,7 +216,7 @@ export class MorphRenderer
   }
 
   // A helper's method for determining color brightness
-  isColorLight(color)
+  private isColorLight(color: string): boolean
   {
     // Simplified check for primary colors
     if (color === 'transparent') return true
@@ -205,10 +226,10 @@ export class MorphRenderer
     // For hex colors
     if (color.startsWith('#')) {
       const hex = color.replace('#', '')
-      const r = hex.substring(0, 2)
-      const g = hex.substring(2, 4)
-      const b = hex.substring(4, 6)
-      const brightness = calcLuminance(r, g, b,)
+      const r = parseInt(hex.substring(0, 2), 16)
+      const g = parseInt(hex.substring(2, 4), 16)
+      const b = parseInt(hex.substring(4, 6), 16)
+      const brightness = calcLuminance(r, g, b)
 
       return brightness > 128
     }
@@ -221,7 +242,7 @@ export class MorphRenderer
         const r = parseInt(match[1])
         const g = parseInt(match[2])
         const b = parseInt(match[3])
-        const brightness = calcLuminance(r, g, b,)
+        const brightness = calcLuminance(r, g, b)
 
         return brightness > 128
       }

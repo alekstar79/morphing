@@ -1,19 +1,16 @@
-import { ImageDistribution } from './image-distribution.js'
-import { MorphPoint } from './point.js'
+import { ImageDistribution } from '@/image-distribution'
+import { MorphPoint } from '@/point'
 
-/**
-* @class
-* @name PoissonDiskSampler
-* @property {number} width
-* @property {number} height
-* @property {number} cellSize
-* @property {number} gridWidth
-* @property {number} gridHeight
-* @property {[]} grid
-*/
 export class PoissonDiskSampler
 {
-  constructor(width, height, radius)
+  public width: number
+  public height: number
+  public cellSize: number
+  public gridWidth: number
+  public gridHeight: number
+  public grid: (MorphPoint | null)[][]
+
+  constructor(width: number, height: number, radius: number)
   {
     this.width = width
     this.height = height
@@ -23,9 +20,9 @@ export class PoissonDiskSampler
     this.grid = this.buildGrid()
   }
 
-  buildGrid()
+  private buildGrid(): (MorphPoint | null)[][]
   {
-    const grid = []
+    const grid: (MorphPoint | null)[][] = []
     for (let i = 0; i < this.gridWidth; i++) {
       grid[i] = new Array(this.gridHeight).fill(null)
     }
@@ -33,26 +30,25 @@ export class PoissonDiskSampler
     return grid
   }
 
-  setGridPoint(gridX, gridY, value)
+  private setGridPoint(gridX: number, gridY: number, value: MorphPoint | null): void
   {
-    if (gridX >= 0 && gridX < this.gridWidth &&
-      gridY >= 0 && gridY < this.gridHeight) {
+    if (gridX >= 0 && gridX < this.gridWidth && gridY >= 0 && gridY < this.gridHeight) {
       this.grid[gridX][gridY] = value
     }
   }
 
-  getNeighborhood(gridX, gridY, offset = 2)
+  private getNeighborhood(gridX: number, gridY: number, offset: number = 2): MorphPoint[]
   {
     const minX = Math.max(0, gridX - offset)
     const maxX = Math.min(this.gridWidth - 1, gridX + offset)
     const minY = Math.max(0, gridY - offset)
     const maxY = Math.min(this.gridHeight - 1, gridY + offset)
 
-    const neighbors = []
+    const neighbors: MorphPoint[] = []
     for (let x = minX; x <= maxX; x++) {
       for (let y = minY; y <= maxY; y++) {
         if (this.grid[x][y]) {
-          neighbors.push(this.grid[x][y])
+          neighbors.push(this.grid[x][y]!)
         }
       }
     }
@@ -60,7 +56,7 @@ export class PoissonDiskSampler
     return neighbors
   }
 
-  isInNeighborhood(point, minDistance)
+  private isInNeighborhood(point: MorphPoint, minDistance: number): boolean
   {
     const gridPoint = point.toGrid(this.cellSize)
     const neighbors = this.getNeighborhood(gridPoint.x, gridPoint.y)
@@ -70,7 +66,7 @@ export class PoissonDiskSampler
     )
   }
 
-  distribute(maxPoints, radius, imageData)
+  distribute(maxPoints: number, radius: number, imageData: ImageData): ImageDistribution
   {
     const processList = []
     const result = []
@@ -88,11 +84,11 @@ export class PoissonDiskSampler
 
     while (result.length < maxPoints && processList.length > 0) {
       const randomIndex = Math.floor(Math.random() * processList.length)
-      const point = processList[randomIndex]
+      const point: MorphPoint = processList[randomIndex]
 
       let added = false
       for (let attempt = 0; attempt < 20; attempt++) {
-        const newPoint = point.generateRandomAround(radius)
+        const newPoint: MorphPoint = point.generateRandomAround(radius)
 
         if (!newPoint.isInRectangle(this.width, this.height)) continue
         if (this.isInNeighborhood(newPoint, radius)) continue
